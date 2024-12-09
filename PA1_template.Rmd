@@ -64,7 +64,7 @@ head(total_steps_per_day)
 ```
 
 ##### 2. Create a histogram of the total steps per day
-```{r}
+```{r total_steps_per_day, fig.path='figure/'}
 ggplot(total_steps_per_day, aes(x = total_steps)) +  # Initialize ggplot with 'total_steps' on the x-axis
   geom_histogram(  # Plot the histogram
     binwidth = 1000,  # Set the width of each bin (interval size)
@@ -108,7 +108,7 @@ average_steps_per_interval <- data_clean %>%
   summarise(average_steps = mean(steps, na.rm = TRUE))
 ```
 Create the time series plot (line plot)
-```{r}
+```{r average_steps_per_interval, fig.path='figure/'}
 ggplot(average_steps_per_interval, aes(x = interval, y = average_steps)) +
   geom_line(color = "blue") +  # Line plot with blue color
   labs(title = "Time Series of Average Steps per 5-Minute Interval",
@@ -181,7 +181,7 @@ total_steps_per_day_filled <- data_filled %>%
 
 ```
 
-```{r}
+```{r total_steps_per_day_filled, fig.path='figure/'}
 
 ggplot(total_steps_per_day_filled, aes(x = total_steps)) +  # Initialize ggplot with 'total_steps' on the x-axis
   geom_histogram(  # Plot the histogram
@@ -201,7 +201,8 @@ ggplot(total_steps_per_day_filled, aes(x = total_steps)) +  # Initialize ggplot 
 
 ##### A) Do these values differ from the estimates from the first part of the assignment? 
 
-```{r}
+```{r combined_data, fig.path='figure/'}
+
 # Combine both datasets into one, adding a 'group' column to distinguish them
 combined_data <- rbind(
   data.frame(total_steps = total_steps_per_day_filled$total_steps, group = "With NA filled"),
@@ -249,7 +250,8 @@ average_steps_by_day <- data %>%
 # Print the average steps for weekdays and weekends
 head(average_steps_by_day)
 ```
-```{r}
+```{r final_bar_plot, fig.path='figure/'}
+
 # Create the bar plot
 ggplot(average_steps_by_day, aes(x = weekend, y = average_steps, fill = weekend)) + 
   geom_bar(stat = "identity", show.legend = FALSE) +  # Create bars (identity means use 'average_steps' as height)

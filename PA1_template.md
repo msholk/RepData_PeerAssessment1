@@ -119,7 +119,7 @@ ggplot(total_steps_per_day, aes(x = total_steps)) +  # Initialize ggplot with 't
   theme_minimal()  # Use a minimal theme for a clean and simple appearance
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](figure/total_steps_per_day-1.png)<!-- -->
   
 ##### 3. Calculate and report the mean and median of the total number of steps taken per day
 
@@ -160,7 +160,7 @@ ggplot(average_steps_per_interval, aes(x = interval, y = average_steps)) +
   theme_minimal()  # Minimal theme for clean presentation
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](figure/average_steps_per_interval-1.png)<!-- -->
   
 ##### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
@@ -247,7 +247,7 @@ ggplot(total_steps_per_day_filled, aes(x = total_steps)) +  # Initialize ggplot 
   theme_minimal()  # Use a minimal theme for a clean and simple appearance
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](figure/total_steps_per_day_filled-1.png)<!-- -->
 
 ##### A) Do these values differ from the estimates from the first part of the assignment? 
 
@@ -277,7 +277,7 @@ ggplot(combined_data, aes(x = total_steps, fill = group, color = group)) +
   scale_color_manual(values = c("black", "black"))  # Custom outline color
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](figure/combined_data-1.png)<!-- -->
 
 ##### B) What is the impact of imputing missing data on the estimates of the total daily number of steps?
 The blue bars (With NA Filled) show a much higher frequency of total steps, particularly around the 10,000 mark. This suggests that imputing missing values has added a large number of steps to certain days.
@@ -333,6 +333,6 @@ ggplot(average_steps_by_day, aes(x = weekend, y = average_steps, fill = weekend)
   theme_minimal()  # Clean minimal theme
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+![](figure/final_bar_plot-1.png)<!-- -->
   
 The plot clearly shows that people tend to take more steps on weekends than on weekdays, as indicated by the taller red bar.
