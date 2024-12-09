@@ -7,15 +7,134 @@ output:
 
 
 ## Loading and preprocessing the data
+Load necessary libraries
+```{r message = FALSE, warning = FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+rm(list = ls())
+```
+Define a function to read CSV from a ZIP file
+```{r}
+read_csv_from_zip <- function() {
+  # Specify the path to the ZIP file and the name of the CSV file inside it
+  zip_file <- "activity.zip"
+  csv_file <- "activity.csv" 
+  # Read the CSV file directly from the ZIP archive
+  data <- read.csv(unz(zip_file, csv_file))
+  
+  # Return the data frame containing the CSV data
+  return(data)
+}
+```
+
+Read the CSV file directly from the ZIP archive
+```{r}
+data <- read_csv_from_zip()
+```
+
+View the first few rows of the data
+```{r}
+head(data)
+```
 
 
 
 ## What is mean total number of steps taken per day?
 
+Filter rows where 'steps' is not NA and not zero, and convert 'steps' to numeric
+```{r}
+data_filtered <- data %>%
+  dplyr::filter(!is.na(steps) ) %>%  # Filter out NA and 0 values in 'steps'
+  dplyr::mutate(steps = as.numeric(steps))       # Convert 'steps' column to numeric
+
+# Display the filtered data
+head(data_filtered)
+```
+##### 1. Calculate the total number of steps taken per day
+Group by 'date' and calculate the total number of steps per day
+```{r}
+total_steps_per_day <- data_filtered %>%
+  group_by(date) %>%
+  summarise(
+    total_steps = sum(steps, na.rm = TRUE)
+  )
+
+head(total_steps_per_day)
+```
+
+##### 2. Create a histogram of the total steps per day
+```{r}
+ggplot(total_steps_per_day, aes(x = total_steps)) +  # Initialize ggplot with 'total_steps' on the x-axis
+  geom_histogram(  # Plot the histogram
+    binwidth = 1000,  # Set the width of each bin (interval size)
+    color = "black",  # Outline color of the bars
+    fill = "blue",  # Fill color of the bars
+    alpha = 0.5  # Transparency level of the bars (0 is fully transparent, 1 is fully opaque)
+  ) +
+  labs(  # Add labels to the plot
+    title = "Histogram of Total Steps Taken Per Day",  # Title of the plot
+    x = "Total Steps",  # Label for the x-axis
+    y = "Frequency"  # Label for the y-axis
+  ) +
+  theme_minimal()  # Use a minimal theme for a clean and simple appearance
+
+```
+  
+##### 3. Calculate and report the mean and median of the total number of steps taken per day
+```{r}
+mean_steps <- mean(total_steps_per_day$total_steps)
+mean_steps<-format(mean_steps, scientific = FALSE, digits = 6, big.mark = ",")
+median_steps <- median(total_steps_per_day$total_steps)
+median_steps<-format(median_steps, scientific = FALSE, digits = 6, big.mark = ",")
+```
+
+The __mean__ of the total number of steps taken per day   __`r mean_steps`__.  
+The __median__ of the total number of steps taken per day __`r median_steps`__.
+
+
+ 
 
 
 ## What is the average daily activity pattern?
+##### 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+Replace NA values with 0 in the steps column
+```{r}
+data_clean <- data %>%
+  mutate(steps = ifelse(is.na(steps), 0, steps))  # Replace NA with 0
+  
+average_steps_per_interval <- data_clean %>%
+  group_by(interval) %>%
+  summarise(average_steps = mean(steps, na.rm = TRUE))
+```
+Create the time series plot (line plot)
+```{r}
+ggplot(average_steps_per_interval, aes(x = interval, y = average_steps)) +
+  geom_line(color = "blue") +  # Line plot with blue color
+  labs(title = "Time Series of Average Steps per 5-Minute Interval",
+       x = "5-Minute Interval",
+       y = "Average Number of Steps") +
+  theme_minimal()  # Minimal theme for clean presentation
+```
+  
+##### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+```{r}
+max_interval <- average_steps_per_interval %>%
+  filter(average_steps == max(average_steps)) %>%
+  select(interval, average_steps)
+interval<-max_interval$interval
+```
+Convert interval to time
+```{r}
+hours <- interval %/% 60  # Integer division to get hours
+minutes <- interval %% 60  # Modulo to get minutes
 
+# Format the time in HH:MM format
+time_of_day <- sprintf("%02d:%02d", hours, minutes)
+```
+  
+The 5-minute interval with maximum of steps is: __`r interval`__.   
+This corresponds to time of day: __`r time_of_day`__. 
 
 
 ## Imputing missing values
