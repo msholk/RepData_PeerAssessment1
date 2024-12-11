@@ -141,8 +141,112 @@ injuries_plot <- ggplot(top_10_health_summary_injuries, aes(x = reorder(EVTYPE, 
   )
 ````
 
-## Results  
-Let's create the plots, and we can clearly observe that Tornado is the most harmful event in terms of both population health—causing the highest number of injuries and fatalities.
+ 
+
+
+### Question 2
+Across the United States, which types of events have the greatest economic consequences?
+
+To address the question we need to focus on the relevant fields that provide information about property damage (PROPDMG) and crop damage (CROPDMG), 
+as these directly represent economic consequences.
+
+Relevant Fields:  
+- EVTYPE: This column will help us categorize the type of storm event.  
+- PROPDMG: The property damage amount associated with each event.  
+- PROPDMGEXP: The exponent or scale (e.g., "K" for thousands, "M" for millions) for the property damage value.  
+- CROPDMG: The crop damage amount associated with each event.  
+- CROPDMGEXP: The exponent or scale (e.g., "K" for thousands, "M" for millions) for the crop damage value.
+
+
 ````{r}
-grid.arrange(fatalities_plot, injuries_plot, nrow = 2)
+economic_data <- data %>%
+  select(EVTYPE, PROPDMG, PROPDMGEXP,CROPDMG,CROPDMGEXP)
+````
+
+
+Convert PROPDMG and CROPDMG to numeric (if they're not already numeric)
+````{r}
+economic_data <- economic_data %>%
+  mutate(
+    PROPDMG = as.numeric(PROPDMG),
+    CROPDMG = as.numeric(CROPDMG)
+  )
+````
+Recode PROPDMGEXP and CROPDMGEXP to numeric scale factors 
+````{r}
+economic_data <- economic_data %>%
+  mutate(
+      PROPDMGEXP = recode(PROPDMGEXP,
+                        "K" = 1e3, "M" = 1e6, "B" = 1e9,
+                        "k" = 1e3, "m" = 1e6, "b" = 1e9,
+                        "H" = 1e2, "h" = 1e2, 
+                        .default = 1),  # Default for all unspecified values
+      CROPDMGEXP = recode(CROPDMGEXP,
+                        "K" = 1e3, "M" = 1e6, "B" = 1e9,
+                        "k" = 1e3, "m" = 1e6, "b" = 1e9,
+                        "H" = 1e2, "h" = 1e2, 
+                        .default = 1)  # Default for all unspecified values
+    )
+````
+
+
+Calculate total property and crop damage
+````{r}
+economic_data <- economic_data %>%
+  mutate(
+    total_property_damage = PROPDMG * PROPDMGEXP,
+    total_crop_damage = CROPDMG * CROPDMGEXP,
+    total_damage = total_property_damage + total_crop_damage
+  )
+````
+Summarize by EVTYPE
+````{r}
+economic_summary <- economic_data %>%
+  group_by(EVTYPE) %>%
+  summarise(
+    total_property_damage = sum(total_property_damage, na.rm = TRUE),
+    total_crop_damage = sum(total_crop_damage, na.rm = TRUE),
+    total_damage = sum(total_damage, na.rm = TRUE)
+  ) %>%
+  arrange(desc(total_damage))  # Order by total economic damage
+````
+
+
+Take the first 10 rows of the  dataset ordered by __total_damage__
+````{r}
+top_10_economic_summary <- economic_summary %>% 
+  arrange(desc(total_damage)) %>%
+  head( 10)
+````
+And prepare the plot  
+````{r}
+economic_plot <- top_10_economic_summary %>%
+  mutate(total_damage_billion = total_damage / 1e9) %>%
+  ggplot(aes(x = reorder(EVTYPE, total_damage_billion, FUN = sum), y = total_damage_billion)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    coord_flip() +   
+    labs(
+      title = "Top 10 Storm Events by Total Economic Damage",
+      x = "",
+      y = "Total Damage (Billions)"
+    ) +
+    theme_minimal()  # Minimal theme for the plot
+````
+
+
+## Results  
+
+__Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?__  
+In both charts, Tornado clearly emerges as the most harmful event in terms of both fatalities and injuries. The charts highlight the significant public health impact of storms like Tornado, Excessive Heat, and Flash Flood, though injuries tend to be more widespread, affecting a larger number of people.  
+````{r echo = TRUE}
+fatalities_plot
+injuries_plot
+````
+
+__Across the United States, which types of events have the greatest economic consequences?__
+
+The chart shows the Top 10 Storm Events by Total Economic Damage in the United States, scaled to billions. Flood is by far the most costly event, followed by Hurricane/Typhoon and Tornado, with significant damage attributed to each. The other events, including Storm Surge, Hail, and Flash Flood, contribute much less in total damage, though they are still notable. The chart highlights the stark difference in economic impact between these types of storms.
+
+````{r echo = TRUE}
+economic_plot
 ````
