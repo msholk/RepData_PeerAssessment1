@@ -3,3 +3,9 @@
 .RData
 .Ruserdata
 PA1_template_files/*
+repdata_data_StormData.csv/repdata_data_StormData.csv
+unnamed-chunk*
+repdata_data_StormData.csv.bz2
+PA2_template_cache/html/__packages
+PA2_template.html
+PA2_template.md

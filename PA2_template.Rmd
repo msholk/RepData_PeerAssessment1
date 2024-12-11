@@ -1,0 +1,148 @@
+---
+title: "Impact of Severe Weather Events on Health and Economy in the United States: A NOAA Storm Database Analysis"
+output: 
+  html_document:
+    keep_md: true
+---
+
+## Synopsis
+
+This analysis explores the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database to investigate the impacts of severe weather events across the United States. The dataset, spanning from 1950 to November 2011, includes details on various types of storms and weather events, including fatalities, injuries, and property damage. The primary objective is to answer two key questions: which types of events are most harmful to population health, and which have the greatest economic consequences.
+
+
+## Data Source
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. You can download the file from the course web site:  
+
+- [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) [47Mb]
+
+The data was downloaded on December 11, 2024.
+
+There is also some documentation of the database available.
+
+- [National Weather Service Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+- [National Climatic Data Center Storm Events FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
+
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
+
+
+## Data Processing
+Load necessary libraries
+```{r message = FALSE, warning = FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(gridExtra)
+rm(list = ls())
+```
+Define a function to read CSV from a ZIP file
+```{r}
+read_csv_from_zip <- function() {
+  # Specify the path to the BZ2 compressed file
+  zip_file <- "repdata_data_StormData.csv.bz2"
+  # Specify the name of the CSV file inside the BZ2 archive
+  csv_file <- "repdata_data_StormData.csv" 
+  # Open a connection to the BZ2 file
+  con <- bzfile(zip_file, csv_file)
+  # Read the CSV data from the BZ2 file
+  data <- read.csv(con)
+  # Close the connection to the BZ2 file
+  close(con)
+  # Return the data frame containing the CSV data
+  return(data)
+}
+
+```
+
+Read the CSV file directly from the ZIP archive
+```{r cache=TRUE}
+data <- read_csv_from_zip()
+```
+
+After reading in we check the first few rows (there are 902,297) rows in this dataset.
+```{r}
+dim(data)
+```
+```{r}
+head(data)
+```
+All columns in the DS are:
+```{r}
+names(data)
+```
+### Question 1
+Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+First we pick up the columns related to health impact:
+````{r}
+health_data <- data %>%
+  select(EVTYPE, FATALITIES, INJURIES) %>%
+  mutate(
+    FATALITIES = as.numeric(FATALITIES),
+    INJURIES = as.numeric(INJURIES)
+  )
+````
+Summarize harms by Event Type
+````{r}
+health_summary <- health_data %>%
+  group_by(EVTYPE) %>%
+  summarise(
+    total_fatalities = sum(FATALITIES, na.rm = TRUE),
+    total_injuries = sum(INJURIES, na.rm = TRUE)
+  )
+````
+Filter out rows where both total_fatalities and total_injuries are zero
+````{r}
+health_summary <- health_summary %>%
+  filter(total_fatalities > 0 | total_injuries > 0) 
+````
+Take the first 10 rows of the  dataset ordered by Fatalities
+````{r}
+top_10_health_summary_fatalities <- health_summary %>% 
+  arrange(desc(total_fatalities)) %>%
+  head( 10)
+
+
+````
+And prepare the plot  
+````{r}
+fatalities_plot <- ggplot(top_10_health_summary_fatalities, aes(x = reorder(EVTYPE, total_fatalities, FUN = sum), y = total_fatalities)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() + 
+  labs(
+    title = "Top 10 Storm Events by Total Fatalities",
+    x = "",
+    y = "Total Fatalities"
+  ) +
+  theme_minimal() + # Minimal theme for the plot
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate labels
+  )
+````
+
+Take the first 10 rows of the  dataset ordered by Injuries
+````{r}
+top_10_health_summary_injuries <- health_summary %>% 
+  arrange(desc(total_injuries)) %>%
+  head( 10)
+````
+And prepare the plot  
+````{r}
+injuries_plot <- ggplot(top_10_health_summary_injuries, aes(x = reorder(EVTYPE, total_injuries, FUN = sum), y = total_injuries)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +   
+  labs(
+    title = "Top 10 Storm Events by Total Injuries",
+    x = "",
+    y = "Total Injuries"
+  ) +
+  theme_minimal() + # Minimal theme for the plot
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate labels
+  )
+````
+
+## Results  
+Let's create the plots, and we can clearly observe that Tornado is the most harmful event in terms of both population health—causing the highest number of injuries and fatalities.
+````{r}
+grid.arrange(fatalities_plot, injuries_plot, nrow = 2)
+````
